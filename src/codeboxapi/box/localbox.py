@@ -294,7 +294,7 @@ class LocalBox(BaseBox):
         code: Optional[str] = None,
         file_path: Optional[os.PathLike] = None,
         retry=3,
-    ) -> CodeBoxOutput:
+    ) -> list[CodeBoxOutput]:
         if not code and not file_path:
             raise ValueError("Code or file_path must be specified!")
 
@@ -354,6 +354,8 @@ class LocalBox(BaseBox):
             msg_content = received_msg.get("content", {})
             msg_data = msg_content.get("data", {})
 
+            outputs = []
+
             if (
                 msg_header["msg_type"] == "stream"
                 and msg_parent_header["msg_id"] == msg_id
@@ -374,27 +376,51 @@ class LocalBox(BaseBox):
                     print("Output:\n", result)
 
             elif msg_header["msg_type"] == "display_data":
+                known_keys = [
+                    "image/png",
+                    "text/plain",
+                    "application/vnd.bokehjs_load.v0+json",
+                ]
+
                 if "image/png" in msg_data:
-                    return CodeBoxOutput(
-                        type="image/png",
-                        content=msg_data["image/png"],
+                    outputs.append(
+                        CodeBoxOutput(
+                            type="image/png",
+                            content=msg_data["image/png"],
+                        )
                     )
                 if "text/plain" in msg_data:
-                    return CodeBoxOutput(
-                        type="text",
-                        content=msg_data["text/plain"],
+                    outputs.append(
+                        CodeBoxOutput(
+                            type="text",
+                            content=msg_data["text/plain"],
+                        )
                     )
-                return CodeBoxOutput(
-                    type="error",
-                    content="Could not parse output",
-                )
+                if "application/vnd.bokehjs_load.v0+json" in msg_data:
+                    outputs.append(
+                        CodeBoxOutput(
+                            type="bokeh",
+                            content=msg_data["application/vnd.bokehjs_load.v0+json"],
+                        )
+                    )
+
+                if any(key not in known_keys for key in msg_data):
+                    outputs.append(
+                        CodeBoxOutput(
+                            type="error",
+                            content="Could not parse output",
+                        )
+                    )
+
+                return outputs
+
             elif (
                 msg_header["msg_type"] == "status"
                 and msg_parent_header["msg_id"] == msg_id
                 and msg_content["execution_state"] == "idle"
             ):
                 if len(result) > settings.MAX_OUTPUT_LENGTH:
-                    result = "[...]\n" + result[-settings.MAX_OUTPUT_LENGTH:]
+                    result = "[...]\n" + result[-settings.MAX_OUTPUT_LENGTH :]
                 return CodeBoxOutput(
                     type="text", content=result or "code run successfully (no output)"
                 )
@@ -502,7 +528,7 @@ class LocalBox(BaseBox):
                 and msg_content["execution_state"] == "idle"
             ):
                 if len(result) > settings.MAX_OUTPUT_LENGTH:
-                    result = "[...]\n" + result[-settings.MAX_OUTPUT_LENGTH:]
+                    result = "[...]\n" + result[-settings.MAX_OUTPUT_LENGTH :]
                 return CodeBoxOutput(
                     type="text", content=result or "code run successfully (no output)"
                 )
