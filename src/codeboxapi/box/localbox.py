@@ -421,9 +421,9 @@ class LocalBox(BaseBox):
             ):
                 if len(result) > settings.MAX_OUTPUT_LENGTH:
                     result = "[...]\n" + result[-settings.MAX_OUTPUT_LENGTH :]
-                return CodeBoxOutput(
+                return [CodeBoxOutput(
                     type="text", content=result or "code run successfully (no output)"
-                )
+                )]
 
             elif (
                 msg_header["msg_type"] == "error"
@@ -432,7 +432,7 @@ class LocalBox(BaseBox):
                 error = f"{msg_content['ename']}: " f"{msg_content['evalue']}"
                 if settings.VERBOSE:
                     print("Error:\n", error)
-                return CodeBoxOutput(type="error", content=error)
+                return [CodeBoxOutput(type="error", content=error)]
 
     async def arun(
         self,
