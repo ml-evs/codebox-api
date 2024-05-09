@@ -393,8 +393,8 @@ class LocalBox(BaseBox):
                 and msg_parent_header["msg_id"] == msg_id
                 and msg_content["execution_state"] == "idle"
             ):
-                if len(result) > 500:
-                    result = "[...]\n" + result[-500:]
+                if len(result) > settings.MAX_OUTPUT_LENGTH:
+                    result = "[...]\n" + result[-settings.MAX_OUTPUT_LENGTH:]
                 return CodeBoxOutput(
                     type="text", content=result or "code run successfully (no output)"
                 )
@@ -501,8 +501,8 @@ class LocalBox(BaseBox):
                 and msg_parent_header["msg_id"] == msg_id
                 and msg_content["execution_state"] == "idle"
             ):
-                if len(result) > 500:
-                    result = "[...]\n" + result[-500:]
+                if len(result) > settings.MAX_OUTPUT_LENGTH:
+                    result = "[...]\n" + result[-settings.MAX_OUTPUT_LENGTH:]
                 return CodeBoxOutput(
                     type="text", content=result or "code run successfully (no output)"
                 )

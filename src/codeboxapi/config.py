@@ -23,6 +23,7 @@ class CodeBoxSettings(BaseSettings):
     CODEBOX_API_KEY: Optional[str] = None
     CODEBOX_BASE_URL: str = "https://codeboxapi.com/api/v1"
     CODEBOX_TIMEOUT: int = 20
+    MAX_OUTPUT_LENGTH: int = 500
 
 
 settings = CodeBoxSettings()
